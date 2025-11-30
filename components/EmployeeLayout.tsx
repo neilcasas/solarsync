@@ -23,7 +23,7 @@ const employeeNavItems = [
 
 export function EmployeeLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-[#1a1a1a]">
       <Sidebar navItems={employeeNavItems} />
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto p-8">{children}</div>

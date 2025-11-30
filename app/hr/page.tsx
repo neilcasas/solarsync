@@ -146,9 +146,9 @@ export default function HRPage() {
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalEmployees}</div>
-              <p className="text-xs text-muted-foreground">All employees</p>
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">{totalEmployees}</div>
+              <p className="text-sm text-muted-foreground">All employees</p>
             </CardContent>
           </Card>
 
@@ -159,11 +159,11 @@ export default function HRPage() {
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-green-600">
                 {workingEmployees}
               </div>
-              <p className="text-xs text-muted-foreground">Active now</p>
+              <p className="text-sm text-muted-foreground">Active now</p>
             </CardContent>
           </Card>
 
@@ -172,11 +172,11 @@ export default function HRPage() {
               <CardTitle className="text-sm font-medium">On Break</CardTitle>
               <Coffee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-orange-600">
                 {onBreakEmployees}
               </div>
-              <p className="text-xs text-muted-foreground">Taking a break</p>
+              <p className="text-sm text-muted-foreground">Taking a break</p>
             </CardContent>
           </Card>
 
@@ -185,11 +185,11 @@ export default function HRPage() {
               <CardTitle className="text-sm font-medium">Clocked Out</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-gray-600">
                 {clockedOutEmployees}
               </div>
-              <p className="text-xs text-muted-foreground">Not working</p>
+              <p className="text-sm text-muted-foreground">Not working</p>
             </CardContent>
           </Card>
         </div>

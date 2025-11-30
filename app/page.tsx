@@ -76,12 +76,14 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Status</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                <Badge variant={isClockedIn ? "default" : "secondary"}>
-                  {isClockedIn ? "Working" : "Clocked Out"}
-                </Badge>
-              </div>
+            <CardContent className="flex flex-col items-center justify-center">
+              <h1
+                className={`text-3xl font-bold ${
+                  isClockedIn ? "text-[#C4D600]" : "text-red-600"
+                }`}
+              >
+                {isClockedIn ? "Working" : "Clocked Out"}
+              </h1>
             </CardContent>
           </Card>
 
@@ -93,11 +95,11 @@ export default function Home() {
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">
                 {formatTime(workingTime)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {isClockedIn ? "Currently active" : "Not clocked in"}
               </p>
             </CardContent>
@@ -109,11 +111,11 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Breaks</CardTitle>
               <Coffee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-orange-600">
                 {breaksToday}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {breaksRemaining} remaining today
               </p>
             </CardContent>
@@ -127,11 +129,11 @@ export default function Home() {
               </CardTitle>
               <Plane className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-green-600">
                 {leavesRemaining}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {leavesTaken} days used this year
               </p>
             </CardContent>

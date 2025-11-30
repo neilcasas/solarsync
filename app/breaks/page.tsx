@@ -113,7 +113,9 @@ export default function BreaksPage() {
       <div className="space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Breaks</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[#c4d600]">
+            Breaks
+          </h1>
           <p className="text-muted-foreground">
             Manage and track your break time
           </p>
@@ -128,11 +130,11 @@ export default function BreaksPage() {
               </CardTitle>
               <Coffee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-orange-600">
                 {breaksToday}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Total breaks taken
               </p>
             </CardContent>
@@ -145,9 +147,9 @@ export default function BreaksPage() {
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalBreakTime} min</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">{totalBreakTime} min</div>
+              <p className="text-sm text-muted-foreground">
                 Time on break today
               </p>
             </CardContent>
@@ -160,11 +162,11 @@ export default function BreaksPage() {
                 {isOnBreak ? "On Break" : "Working"}
               </Badge>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">
                 {isOnBreak ? formatTime(breakTimer) : "--:--"}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {isOnBreak ? currentBreakType : "Not on break"}
               </p>
             </CardContent>

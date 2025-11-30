@@ -215,9 +215,9 @@ export default function HRLeavesPage() {
               </CardTitle>
               <Plane className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalRequests}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">{totalRequests}</div>
+              <p className="text-sm text-muted-foreground">All time</p>
             </CardContent>
           </Card>
 
@@ -226,11 +226,11 @@ export default function HRLeavesPage() {
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-orange-600">
                 {totalPending}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting review</p>
+              <p className="text-sm text-muted-foreground">Awaiting review</p>
             </CardContent>
           </Card>
 
@@ -239,11 +239,11 @@ export default function HRLeavesPage() {
               <CardTitle className="text-sm font-medium">Approved</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-green-600">
                 {totalApproved}
               </div>
-              <p className="text-xs text-muted-foreground">Accepted</p>
+              <p className="text-sm text-muted-foreground">Accepted</p>
             </CardContent>
           </Card>
 
@@ -252,11 +252,11 @@ export default function HRLeavesPage() {
               <CardTitle className="text-sm font-medium">Rejected</CardTitle>
               <XCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-red-600">
                 {totalRejected}
               </div>
-              <p className="text-xs text-muted-foreground">Declined</p>
+              <p className="text-sm text-muted-foreground">Declined</p>
             </CardContent>
           </Card>
         </div>

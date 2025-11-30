@@ -230,9 +230,9 @@ export default function LeavesPage() {
               </CardTitle>
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalLeaveDays}</div>
-              <p className="text-xs text-muted-foreground">Annual allocation</p>
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">{totalLeaveDays}</div>
+              <p className="text-sm text-muted-foreground">Annual allocation</p>
             </CardContent>
           </Card>
 
@@ -241,11 +241,11 @@ export default function LeavesPage() {
               <CardTitle className="text-sm font-medium">Used Days</CardTitle>
               <Plane className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-orange-600">
                 {usedLeaveDays}
               </div>
-              <p className="text-xs text-muted-foreground">Days taken</p>
+              <p className="text-sm text-muted-foreground">Days taken</p>
             </CardContent>
           </Card>
 
@@ -256,11 +256,11 @@ export default function LeavesPage() {
               </CardTitle>
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-green-600">
                 {remainingLeaveDays}
               </div>
-              <p className="text-xs text-muted-foreground">Available balance</p>
+              <p className="text-sm text-muted-foreground">Available balance</p>
             </CardContent>
           </Card>
 
@@ -271,9 +271,9 @@ export default function LeavesPage() {
               </CardTitle>
               <Badge variant="secondary">{pendingRequests}</Badge>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingRequests}</div>
-              <p className="text-xs text-muted-foreground">Awaiting approval</p>
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold">{pendingRequests}</div>
+              <p className="text-sm text-muted-foreground">Awaiting approval</p>
             </CardContent>
           </Card>
         </div>
