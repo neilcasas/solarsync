@@ -91,9 +91,9 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Status</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center">
+            <CardContent className="flex flex-col items-center justify-center py-8">
               <h1
-                className={`text-3xl font-bold ${
+                className={`text-4xl font-bold text-center ${
                   isClockedIn ? "text-[#C4D600]" : "text-red-600"
                 }`}
               >
@@ -102,21 +102,54 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Currently Working Time */}
+          {/* Attendance Overview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Working Time Today
+                Attendance Overview
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold">
-                {formatTime(workingTime)}
+            <CardContent className="flex flex-col items-center justify-center py-2">
+              <ResponsiveContainer width="100%" height={140}>
+                <PieChart>
+                  <Pie
+                    data={attendanceData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    outerRadius={55}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {attendanceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#333333",
+                      border: "1px solid #444444",
+                      borderRadius: "8px",
+                      color: "#ffffff",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-col gap-0.5 text-xs w-full px-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#C4D600]"></div>
+                  <span className="text-muted-foreground">Attended: 20</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                  <span className="text-muted-foreground">Leave: 5</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-600"></div>
+                  <span className="text-muted-foreground">Absent: 2</span>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {isClockedIn ? "Currently active" : "Not clocked in"}
-              </p>
             </CardContent>
           </Card>
 
@@ -126,12 +159,15 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Breaks</CardTitle>
               <Coffee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold text-orange-600">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <div className="text-6xl font-bold text-orange-600">
                 {breaksToday}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground mt-2">
                 {breaksRemaining} remaining today
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {breaksToday} taken today
               </p>
             </CardContent>
           </Card>
@@ -144,11 +180,11 @@ export default function Home() {
               </CardTitle>
               <Plane className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold text-green-600">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <div className="text-6xl font-bold text-green-600">
                 {leavesRemaining}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground mt-2">
                 {leavesTaken} days used this year
               </p>
             </CardContent>
@@ -246,52 +282,6 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Attendance Analytics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance Overview</CardTitle>
-            <CardDescription>Your attendance record this month</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={attendanceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {attendanceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#333333",
-                    border: "1px solid #444444",
-                    borderRadius: "8px",
-                    color: "#ffffff",
-                  }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  iconType="circle"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value, entry: any) => (
-                    <span style={{ color: "#ffffff" }}>
-                      {value}: {entry.payload.value} days
-                    </span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
     </EmployeeLayout>
   );
