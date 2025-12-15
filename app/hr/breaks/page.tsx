@@ -18,7 +18,79 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Coffee, AlertTriangle, CheckCircle, Clock, Users } from "lucide-react";
+import {
+  Coffee,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Users,
+  FileText,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+// Function to generate Break Report
+const generateBreakReport = (
+  employees: typeof employeeBreaks,
+  breakTypes: typeof breakTypeStats
+) => {
+  const totalBreaks = employees.reduce((sum, e) => sum + e.breaksTaken, 0);
+  const avgBreakTime = Math.round(
+    employees.reduce((sum, e) => sum + e.totalBreakTime, 0) / employees.length
+  );
+
+  const reportContent = `
+BREAK ANALYTICS REPORT
+Generated: ${new Date().toLocaleString()}
+${"=".repeat(60)}
+
+SUMMARY
+-------
+Total Breaks Today: ${totalBreaks}
+Average Break Time: ${avgBreakTime} min per employee
+Employees with Breaks: ${employees.filter((e) => e.hasTakenBreak).length}
+Employees without Breaks: ${employees.filter((e) => !e.hasTakenBreak).length}
+
+BREAK TYPE DISTRIBUTION
+-----------------------
+${breakTypes
+  .map(
+    (bt) => `
+Type: ${bt.type}
+Count: ${bt.count}
+Total Minutes: ${bt.totalMinutes}
+Avg Duration: ${bt.avgDuration} min
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+EMPLOYEE BREAK DETAILS
+----------------------
+${employees
+  .map(
+    (emp) => `
+Name: ${emp.name}
+Breaks Taken: ${emp.breaksTaken}
+Total Break Time: ${emp.totalBreakTime} min
+Last Break: ${emp.lastBreak}
+Status: ${emp.status}
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+${"=".repeat(60)}
+End of Report
+  `;
+
+  const blob = new Blob([reportContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `break-report-${new Date().toISOString().split("T")[0]}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 // Mock employee break data
 const employeeBreaks = [
@@ -133,11 +205,21 @@ export default function HRBreaksPage() {
     <HRLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Break Analytics</h1>
-          <p className="text-muted-foreground">
-            Monitor employee break patterns and compliance
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Break Analytics
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor employee break patterns and compliance
+            </p>
+          </div>
+          <Button
+            onClick={() => generateBreakReport(employees, breakTypeStats)}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Generate Report
+          </Button>
         </div>
 
         {/* Stats Cards */}

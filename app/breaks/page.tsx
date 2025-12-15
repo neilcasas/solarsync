@@ -23,9 +23,9 @@ import { Coffee, Play, Pause, Clock } from "lucide-react";
 
 // Mock data for break types
 const breakTypes = [
-  { id: 1, name: "Coffee Break", duration: 15, color: "bg-orange-500" },
-  { id: 2, name: "Lunch Break", duration: 60, color: "bg-green-500" },
-  { id: 3, name: "Short Break", duration: 5, color: "bg-blue-500" },
+  { id: 1, name: "Morning Break", duration: 15, color: "bg-orange-500" },
+  { id: 2, name: "Lunch Break", duration: 30, color: "bg-green-500" },
+  { id: 3, name: "Afternoon Break", duration: 15, color: "bg-blue-500" },
 ];
 
 // Mock break history

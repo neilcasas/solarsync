@@ -20,7 +20,60 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Users, Clock, Coffee, Filter, Send } from "lucide-react";
+import {
+  Search,
+  Users,
+  Clock,
+  Coffee,
+  Filter,
+  Send,
+  FileText,
+} from "lucide-react";
+
+// Function to generate PDF report
+const generateAttendanceReport = (employees: typeof employeesData) => {
+  const reportContent = `
+ATTENDANCE REPORT
+Generated: ${new Date().toLocaleString()}
+${"=".repeat(60)}
+
+SUMMARY
+-------
+Total Employees: ${employees.length}
+Currently Working: ${employees.filter((e) => e.status === "Working").length}
+On Break: ${employees.filter((e) => e.status === "On Break").length}
+Clocked Out: ${employees.filter((e) => e.status === "Clocked Out").length}
+
+EMPLOYEE DETAILS
+----------------
+${employees
+  .map(
+    (emp) => `
+Name: ${emp.name}
+Status: ${emp.status}
+Client: ${emp.client}
+Clock In: ${emp.clockIn}
+Working Time: ${emp.workingTime}
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+${"=".repeat(60)}
+End of Report
+  `;
+
+  const blob = new Blob([reportContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `attendance-report-${
+    new Date().toISOString().split("T")[0]
+  }.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 // Mock employee data
 const employeesData = [
@@ -128,13 +181,19 @@ export default function HRPage() {
     <HRLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Time Logs & Attendance
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor employee work hours and attendance in real-time
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Time Logs & Attendance
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor employee work hours and attendance in real-time
+            </p>
+          </div>
+          <Button onClick={() => generateAttendanceReport(employees)}>
+            <FileText className="mr-2 h-4 w-4" />
+            Generate Report
+          </Button>
         </div>
 
         {/* Stats Cards */}

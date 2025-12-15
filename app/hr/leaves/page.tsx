@@ -28,7 +28,89 @@ import {
   XCircle,
   Plane,
   Calendar,
+  FileText,
 } from "lucide-react";
+
+// Function to generate Leave Report
+const generateLeaveReport = (
+  pending: typeof pendingRequests,
+  approved: typeof approvedRequests,
+  rejected: {
+    id: number;
+    employeeName: string;
+    type: string;
+    startDate: string;
+    endDate: string;
+    days: number;
+    reason: string;
+    status: string;
+  }[]
+) => {
+  const reportContent = `
+LEAVE MANAGEMENT REPORT
+Generated: ${new Date().toLocaleString()}
+${"=".repeat(60)}
+
+SUMMARY
+-------
+Total Requests: ${pending.length + approved.length + rejected.length}
+Pending: ${pending.length}
+Approved: ${approved.length}
+Rejected: ${rejected.length}
+
+PENDING REQUESTS
+----------------
+${pending
+  .map(
+    (req) => `
+Employee: ${req.employeeName}
+Type: ${req.type}
+Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
+Reason: ${req.reason}
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+APPROVED REQUESTS
+-----------------
+${approved
+  .map(
+    (req) => `
+Employee: ${req.employeeName}
+Type: ${req.type}
+Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
+Reason: ${req.reason}
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+REJECTED REQUESTS
+-----------------
+${rejected
+  .map(
+    (req) => `
+Employee: ${req.employeeName}
+Type: ${req.type}
+Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
+Reason: ${req.reason}
+${"─".repeat(40)}`
+  )
+  .join("")}
+
+${"=".repeat(60)}
+End of Report
+  `;
+
+  const blob = new Blob([reportContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `leave-report-${new Date().toISOString().split("T")[0]}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 // Mock leave requests
 const pendingRequests = [
@@ -197,13 +279,21 @@ export default function HRLeavesPage() {
     <HRLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Leave Management
-          </h1>
-          <p className="text-muted-foreground">
-            Review and manage employee leave requests
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Leave Management
+            </h1>
+            <p className="text-muted-foreground">
+              Review and manage employee leave requests
+            </p>
+          </div>
+          <Button
+            onClick={() => generateLeaveReport(pending, approved, rejected)}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Generate Report
+          </Button>
         </div>
 
         {/* Stats Cards */}
