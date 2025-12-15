@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { HRLayout } from "@/components/HRLayout";
 import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -20,6 +29,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Search,
   Users,
@@ -28,7 +44,9 @@ import {
   Filter,
   Send,
   FileText,
+  Calendar as CalendarIcon,
 } from "lucide-react";
+import { format } from "date-fns";
 
 // Function to generate PDF report
 const generateAttendanceReport = (employees: typeof employeesData) => {
@@ -146,6 +164,37 @@ const employeesData = [
 export default function HRPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [employees] = useState(employeesData);
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
+
+  // Generate weekly data
+  const weeklyData = [
+    { day: "Mon", attendance: 7 },
+    { day: "Tue", attendance: 8 },
+    { day: "Wed", attendance: 6 },
+    { day: "Thu", attendance: 8 },
+    { day: "Fri", attendance: 7 },
+    { day: "Sat", attendance: 3 },
+    { day: "Sun", attendance: 2 },
+  ];
+
+  // Generate monthly data
+  const monthlyData = [
+    { day: "Week 1", attendance: 35 },
+    { day: "Week 2", attendance: 38 },
+    { day: "Week 3", attendance: 33 },
+    { day: "Week 4", attendance: 40 },
+  ];
+
+  // Generate custom range data (mock)
+  const customRangeData =
+    dateFrom && dateTo
+      ? Array.from({ length: 7 }, (_, i) => ({
+          day: `Day ${i + 1}`,
+          // eslint-disable-next-line react-hooks/purity
+          attendance: Math.floor(Math.random() * 5) + 4,
+        }))
+      : [];
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -252,6 +301,180 @@ export default function HRPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Attendance Analytics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Attendance Trends</CardTitle>
+            <CardDescription>
+              View attendance data across different time periods
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="weekly" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger value="custom">Custom Range</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="weekly">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart
+                    data={weeklyData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444444" />
+                    <XAxis dataKey="day" stroke="#888888" />
+                    <YAxis stroke="#888888" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#333333",
+                        border: "1px solid #444444",
+                        borderRadius: "8px",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="attendance"
+                      stroke="#C4D600"
+                      strokeWidth={3}
+                      dot={{ fill: "#C4D600", r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </TabsContent>
+
+              <TabsContent value="monthly">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart
+                    data={monthlyData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444444" />
+                    <XAxis dataKey="day" stroke="#888888" />
+                    <YAxis stroke="#888888" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#333333",
+                        border: "1px solid #444444",
+                        borderRadius: "8px",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="attendance"
+                      stroke="#C4D600"
+                      strokeWidth={3}
+                      dot={{ fill: "#C4D600", r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </TabsContent>
+
+              <TabsContent value="custom">
+                <div className="space-y-4">
+                  <div className="flex gap-4 items-center">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">From</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-[240px] justify-start text-left font-normal ${
+                              !dateFrom && "text-muted-foreground"
+                            }`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateFrom ? (
+                              format(dateFrom, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={dateFrom}
+                            onSelect={setDateFrom}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">To</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-[240px] justify-start text-left font-normal ${
+                              !dateTo && "text-muted-foreground"
+                            }`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateTo ? (
+                              format(dateTo, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={dateTo}
+                            onSelect={setDateTo}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  {dateFrom && dateTo ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart
+                        data={customRangeData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444444" />
+                        <XAxis dataKey="day" stroke="#888888" />
+                        <YAxis stroke="#888888" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#333333",
+                            border: "1px solid #444444",
+                            borderRadius: "8px",
+                            color: "#ffffff",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="attendance"
+                          stroke="#C4D600"
+                          strokeWidth={3}
+                          dot={{ fill: "#C4D600", r: 6 }}
+                          activeDot={{ r: 8 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      Please select both start and end dates to view the chart
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
         {/* Employee Records Table */}
         <Card>

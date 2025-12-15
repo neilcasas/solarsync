@@ -12,6 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogIn, LogOut, Clock, Coffee, Plane } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 export default function Home() {
   const [isClockedIn, setIsClockedIn] = useState(false);
@@ -56,6 +64,13 @@ export default function Home() {
   const breaksRemaining = 1;
   const leavesTaken = 5;
   const leavesRemaining = 10;
+
+  // Attendance data for donut chart
+  const attendanceData = [
+    { name: "Days Attended", value: 20, color: "#C4D600" },
+    { name: "Leave Days", value: 5, color: "#FFA500" },
+    { name: "Days Absent", value: 2, color: "#DC2626" },
+  ];
 
   return (
     <EmployeeLayout>
@@ -231,6 +246,52 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Attendance Analytics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Attendance Overview</CardTitle>
+            <CardDescription>Your attendance record this month</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={attendanceData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {attendanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#333333",
+                    border: "1px solid #444444",
+                    borderRadius: "8px",
+                    color: "#ffffff",
+                  }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(value, entry: any) => (
+                    <span style={{ color: "#ffffff" }}>
+                      {value}: {entry.payload.value} days
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
     </EmployeeLayout>
   );
