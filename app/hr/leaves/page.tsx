@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HRLayout } from "@/components/HRLayout";
 import {
   Card,
@@ -31,21 +31,43 @@ import {
   FileText,
 } from "lucide-react";
 
+type LeaveRequest = {
+  leave_id: string;
+  employee_id: string;
+  employeeName: string | null;
+  employeeLastName: string | null;
+  leave_type: string;
+  leave_date_from: string;
+  leave_date_to: string;
+  reason_employee: string | null;
+  reason_hr: string | null;
+  status: "Pending" | "Approved" | "Rejected" | "Cancelled";
+  remaining_leaves: number;
+  decision_timestamp: string | null;
+};
+
+// TODO: Replace with actual HR ID from auth
+const HR_ID = "00000000-0000-0000-0000-000000000001";
+
+const calculateDays = (from: string, to: string) => {
+  const start = new Date(from);
+  const end = new Date(to);
+  return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+};
+
 // Function to generate Leave Report
-const generateLeaveReport = (
-  pending: typeof pendingRequests,
-  approved: typeof approvedRequests,
-  rejected: {
-    id: number;
-    employeeName: string;
-    type: string;
-    startDate: string;
-    endDate: string;
-    days: number;
-    reason: string;
-    status: string;
-  }[]
-) => {
+const generateLeaveReport = (leaves: LeaveRequest[]) => {
+  const pending = leaves.filter((l) => l.status === "Pending");
+  const approved = leaves.filter((l) => l.status === "Approved");
+  const rejected = leaves.filter((l) => l.status === "Rejected");
+
+  const formatRequest = (req: LeaveRequest) => `
+Employee: ${req.employeeName} ${req.employeeLastName}
+Type: ${req.leave_type}
+Dates: ${req.leave_date_from} - ${req.leave_date_to} (${calculateDays(req.leave_date_from, req.leave_date_to)} days)
+Reason: ${req.reason_employee || "N/A"}
+${"─".repeat(40)}`;
+
   const reportContent = `
 LEAVE MANAGEMENT REPORT
 Generated: ${new Date().toLocaleString()}
@@ -53,49 +75,22 @@ ${"=".repeat(60)}
 
 SUMMARY
 -------
-Total Requests: ${pending.length + approved.length + rejected.length}
+Total Requests: ${leaves.length}
 Pending: ${pending.length}
 Approved: ${approved.length}
 Rejected: ${rejected.length}
 
 PENDING REQUESTS
 ----------------
-${pending
-  .map(
-    (req) => `
-Employee: ${req.employeeName}
-Type: ${req.type}
-Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
-Reason: ${req.reason}
-${"─".repeat(40)}`
-  )
-  .join("")}
+${pending.map(formatRequest).join("")}
 
 APPROVED REQUESTS
 -----------------
-${approved
-  .map(
-    (req) => `
-Employee: ${req.employeeName}
-Type: ${req.type}
-Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
-Reason: ${req.reason}
-${"─".repeat(40)}`
-  )
-  .join("")}
+${approved.map(formatRequest).join("")}
 
 REJECTED REQUESTS
 -----------------
-${rejected
-  .map(
-    (req) => `
-Employee: ${req.employeeName}
-Type: ${req.type}
-Dates: ${req.startDate} - ${req.endDate} (${req.days} days)
-Reason: ${req.reason}
-${"─".repeat(40)}`
-  )
-  .join("")}
+${rejected.map(formatRequest).join("")}
 
 ${"=".repeat(60)}
 End of Report
@@ -112,149 +107,37 @@ End of Report
   URL.revokeObjectURL(url);
 };
 
-// Mock leave requests
-const pendingRequests = [
-  {
-    id: 1,
-    employeeName: "Alice Johnson",
-    type: "Vacation",
-    startDate: "Dec 20, 2025",
-    endDate: "Dec 31, 2025",
-    days: 12,
-    reason: "Year-end holiday",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    employeeName: "Carol Martinez",
-    type: "Personal",
-    startDate: "Nov 15, 2025",
-    endDate: "Nov 16, 2025",
-    days: 2,
-    reason: "Family matter",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    employeeName: "Frank Brown",
-    type: "Sick Leave",
-    startDate: "Nov 18, 2025",
-    endDate: "Nov 18, 2025",
-    days: 1,
-    reason: "Medical appointment",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    employeeName: "Grace Chen",
-    type: "Vacation",
-    startDate: "Dec 1, 2025",
-    endDate: "Dec 5, 2025",
-    days: 5,
-    reason: "Travel",
-    status: "Pending",
-  },
-];
-
-const approvedRequests = [
-  {
-    id: 5,
-    employeeName: "Bob Smith",
-    type: "Sick Leave",
-    startDate: "Nov 8, 2025",
-    endDate: "Nov 8, 2025",
-    days: 1,
-    reason: "Medical appointment",
-    status: "Approved",
-    approvedBy: "HR Admin",
-    approvedDate: "Nov 7, 2025",
-  },
-  {
-    id: 6,
-    employeeName: "David Lee",
-    type: "Vacation",
-    startDate: "Oct 10, 2025",
-    endDate: "Oct 14, 2025",
-    days: 5,
-    reason: "Vacation",
-    status: "Approved",
-    approvedBy: "HR Admin",
-    approvedDate: "Oct 5, 2025",
-  },
-  {
-    id: 7,
-    employeeName: "Emma Wilson",
-    type: "Personal",
-    startDate: "Nov 1, 2025",
-    endDate: "Nov 1, 2025",
-    days: 1,
-    reason: "Personal errand",
-    status: "Approved",
-    approvedBy: "HR Admin",
-    approvedDate: "Oct 30, 2025",
-  },
-];
-
-const rejectedRequests = [
-  {
-    id: 8,
-    employeeName: "Henry Davis",
-    type: "Vacation",
-    startDate: "Dec 23, 2025",
-    endDate: "Dec 26, 2025",
-    days: 4,
-    reason: "Holiday",
-    status: "Rejected",
-    rejectedBy: "HR Admin",
-    rejectedDate: "Nov 10, 2025",
-    rejectionReason: "Insufficient coverage",
-  },
-];
-
 export default function HRLeavesPage() {
-  const [pending, setPending] = useState(pendingRequests);
-  const [approved, setApproved] = useState(approvedRequests);
-  const [rejected, setRejected] = useState(rejectedRequests);
+  const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleApprove = (requestId: number) => {
-    const request = pending.find((r) => r.id === requestId);
-    if (request) {
-      setPending(pending.filter((r) => r.id !== requestId));
-      setApproved([
-        ...approved,
-        {
-          ...request,
-          status: "Approved",
-          approvedBy: "HR Admin",
-          approvedDate: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-        },
-      ]);
-    }
+  const fetchLeaves = useCallback(async () => {
+    const res = await fetch("/api/hr/leaves");
+    const data = await res.json();
+    setLeaves(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  const handleApprove = async (leaveId: string) => {
+    await fetch("/api/hr/leaves", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leave_id: leaveId, action: "approve", hr_id: HR_ID }),
+    });
+    fetchLeaves();
   };
 
-  const handleReject = (requestId: number) => {
-    const request = pending.find((r) => r.id === requestId);
-    if (request) {
-      setPending(pending.filter((r) => r.id !== requestId));
-      setRejected([
-        ...rejected,
-        {
-          ...request,
-          status: "Rejected",
-          rejectedBy: "HR Admin",
-          rejectedDate: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          rejectionReason: "Manual rejection",
-        },
-      ]);
-    }
+  const handleReject = async (leaveId: string) => {
+    await fetch("/api/hr/leaves", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leave_id: leaveId, action: "reject", hr_id: HR_ID }),
+    });
+    fetchLeaves();
   };
 
   const getStatusVariant = (status: string) => {
@@ -270,7 +153,11 @@ export default function HRLeavesPage() {
     }
   };
 
-  const totalRequests = pending.length + approved.length + rejected.length;
+  const pending = leaves.filter((l) => l.status === "Pending");
+  const approved = leaves.filter((l) => l.status === "Approved");
+  const rejected = leaves.filter((l) => l.status === "Rejected");
+
+  const totalRequests = leaves.length;
   const totalPending = pending.length;
   const totalApproved = approved.length;
   const totalRejected = rejected.length;
@@ -289,7 +176,7 @@ export default function HRLeavesPage() {
             </p>
           </div>
           <Button
-            onClick={() => generateLeaveReport(pending, approved, rejected)}
+            onClick={() => generateLeaveReport(leaves)}
           >
             <FileText className="mr-2 h-4 w-4" />
             Generate Report
@@ -375,7 +262,9 @@ export default function HRLeavesPage() {
 
               {/* Pending Requests */}
               <TabsContent value="pending">
-                {pending.length === 0 ? (
+                {loading ? (
+                  <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                ) : pending.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>No pending leave requests</p>
@@ -395,25 +284,25 @@ export default function HRLeavesPage() {
                     </TableHeader>
                     <TableBody>
                       {pending.map((request) => (
-                        <TableRow key={request.id}>
+                        <TableRow key={request.leave_id}>
                           <TableCell className="font-medium">
-                            {request.employeeName}
+                            {request.employeeName} {request.employeeLastName}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{request.type}</Badge>
+                            <Badge variant="outline">{request.leave_type}</Badge>
                           </TableCell>
-                          <TableCell>{request.startDate}</TableCell>
-                          <TableCell>{request.endDate}</TableCell>
+                          <TableCell>{request.leave_date_from}</TableCell>
+                          <TableCell>{request.leave_date_to}</TableCell>
                           <TableCell className="font-medium">
-                            {request.days}
+                            {calculateDays(request.leave_date_from, request.leave_date_to)}
                           </TableCell>
-                          <TableCell>{request.reason}</TableCell>
+                          <TableCell>{request.reason_employee || "-"}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleApprove(request.id)}
+                                onClick={() => handleApprove(request.leave_id)}
                               >
                                 <Check className="h-4 w-4 mr-1" />
                                 Approve
@@ -421,7 +310,7 @@ export default function HRLeavesPage() {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleReject(request.id)}
+                                onClick={() => handleReject(request.leave_id)}
                               >
                                 <X className="h-4 w-4 mr-1" />
                                 Reject
@@ -451,19 +340,19 @@ export default function HRLeavesPage() {
                   </TableHeader>
                   <TableBody>
                     {approved.map((request) => (
-                      <TableRow key={request.id}>
+                      <TableRow key={request.leave_id}>
                         <TableCell className="font-medium">
-                          {request.employeeName}
+                          {request.employeeName} {request.employeeLastName}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{request.type}</Badge>
+                          <Badge variant="outline">{request.leave_type}</Badge>
                         </TableCell>
-                        <TableCell>{request.startDate}</TableCell>
-                        <TableCell>{request.endDate}</TableCell>
+                        <TableCell>{request.leave_date_from}</TableCell>
+                        <TableCell>{request.leave_date_to}</TableCell>
                         <TableCell className="font-medium">
-                          {request.days}
+                          {calculateDays(request.leave_date_from, request.leave_date_to)}
                         </TableCell>
-                        <TableCell>{request.reason}</TableCell>
+                        <TableCell>{request.reason_employee || "-"}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(request.status)}>
                             {request.status}
@@ -491,19 +380,19 @@ export default function HRLeavesPage() {
                   </TableHeader>
                   <TableBody>
                     {rejected.map((request) => (
-                      <TableRow key={request.id}>
+                      <TableRow key={request.leave_id}>
                         <TableCell className="font-medium">
-                          {request.employeeName}
+                          {request.employeeName} {request.employeeLastName}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{request.type}</Badge>
+                          <Badge variant="outline">{request.leave_type}</Badge>
                         </TableCell>
-                        <TableCell>{request.startDate}</TableCell>
-                        <TableCell>{request.endDate}</TableCell>
+                        <TableCell>{request.leave_date_from}</TableCell>
+                        <TableCell>{request.leave_date_to}</TableCell>
                         <TableCell className="font-medium">
-                          {request.days}
+                          {calculateDays(request.leave_date_from, request.leave_date_to)}
                         </TableCell>
-                        <TableCell>{request.reason}</TableCell>
+                        <TableCell>{request.reason_employee || "-"}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(request.status)}>
                             {request.status}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { EmployeeLayout } from "@/components/EmployeeLayout";
 import {
   Card,
@@ -39,45 +39,17 @@ import {
 } from "@/components/ui/select";
 import { Plane, Plus, Calendar as CalendarIcon } from "lucide-react";
 
-// Mock leave history
-const leaveHistory = [
-  {
-    id: 1,
-    type: "Vacation",
-    startDate: "Dec 20, 2025",
-    endDate: "Dec 31, 2025",
-    days: 12,
-    reason: "Year-end holiday",
-    status: "Approved",
-  },
-  {
-    id: 2,
-    type: "Sick Leave",
-    startDate: "Nov 8, 2025",
-    endDate: "Nov 8, 2025",
-    days: 1,
-    reason: "Medical appointment",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    type: "Personal",
-    startDate: "Nov 15, 2025",
-    endDate: "Nov 16, 2025",
-    days: 2,
-    reason: "Family matter",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    type: "Vacation",
-    startDate: "Oct 10, 2025",
-    endDate: "Oct 14, 2025",
-    days: 5,
-    reason: "Vacation",
-    status: "Approved",
-  },
-];
+type LeaveRecord = {
+  leave_id: string;
+  leave_type: string;
+  leave_date_from: string;
+  leave_date_to: string;
+  reason_employee: string | null;
+  status: "Pending" | "Approved" | "Rejected" | "Cancelled";
+};
+
+// TODO: Replace with actual employee ID from auth
+const EMPLOYEE_ID = "00000000-0000-0000-0000-000000000001";
 
 export default function LeavesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -85,17 +57,40 @@ export default function LeavesPage() {
   const [leaveReason, setLeaveReason] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmitLeave = () => {
-    console.log("Leave request submitted:", {
-      leaveType,
-      leaveReason,
-      startDate,
-      endDate,
+  const fetchLeaves = useCallback(async () => {
+    const res = await fetch(`/api/leaves?employeeId=${EMPLOYEE_ID}`);
+    const data = await res.json();
+    setLeaves(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  const handleSubmitLeave = async () => {
+    if (!leaveType || !startDate || !endDate) return;
+    
+    await fetch("/api/leaves", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employee_id: EMPLOYEE_ID,
+        leave_type: leaveType,
+        leave_date_from: startDate.toISOString().split("T")[0],
+        leave_date_to: endDate.toISOString().split("T")[0],
+        reason_employee: leaveReason,
+        remaining_leaves: 15,
+      }),
     });
+    
     setDialogOpen(false);
     setLeaveType("");
     setLeaveReason("");
+    fetchLeaves();
   };
 
   const getStatusVariant = (status: string) => {
@@ -118,10 +113,18 @@ export default function LeavesPage() {
     return diffDays;
   };
 
+  const calculateLeaveDays = (from: string, to: string) => {
+    const start = new Date(from);
+    const end = new Date(to);
+    return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  };
+
   const totalLeaveDays = 15;
-  const usedLeaveDays = 5;
+  const usedLeaveDays = leaves
+    .filter((l) => l.status === "Approved")
+    .reduce((sum, l) => sum + calculateLeaveDays(l.leave_date_from, l.leave_date_to), 0);
   const remainingLeaveDays = totalLeaveDays - usedLeaveDays;
-  const pendingRequests = 1;
+  const pendingRequests = leaves.filter((l) => l.status === "Pending").length;
 
   return (
     <EmployeeLayout>
@@ -285,36 +288,44 @@ export default function LeavesPage() {
             <CardDescription>Your leave request records</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Days</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaveHistory.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <Badge variant="outline">{record.type}</Badge>
-                    </TableCell>
-                    <TableCell>{record.startDate}</TableCell>
-                    <TableCell>{record.endDate}</TableCell>
-                    <TableCell className="font-medium">{record.days}</TableCell>
-                    <TableCell>{record.reason}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
+            {loading ? (
+              <p className="text-center py-4 text-muted-foreground">Loading...</p>
+            ) : leaves.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">No leave records found</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Days</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {leaves.map((record) => (
+                    <TableRow key={record.leave_id}>
+                      <TableCell>
+                        <Badge variant="outline">{record.leave_type}</Badge>
+                      </TableCell>
+                      <TableCell>{record.leave_date_from}</TableCell>
+                      <TableCell>{record.leave_date_to}</TableCell>
+                      <TableCell className="font-medium">
+                        {calculateLeaveDays(record.leave_date_from, record.leave_date_to)}
+                      </TableCell>
+                      <TableCell>{record.reason_employee || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(record.status)}>
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
