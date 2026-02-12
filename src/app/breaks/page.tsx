@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { EmployeeLayout } from "@/components/EmployeeLayout";
 import {
   Card,
@@ -21,55 +21,82 @@ import {
 } from "@/components/ui/table";
 import { Coffee, Play, Pause, Clock } from "lucide-react";
 
-// Mock data for break types
+type BreakRecord = {
+  break_id: string;
+  user_id: string;
+  break_type: string;
+  break_start: string | null;
+  break_end: string | null;
+  break_duration: string | null;
+  remaining_break: string | null;
+};
+
 const breakTypes = [
   { id: 1, name: "Morning Break", duration: 15, color: "bg-orange-500" },
   { id: 2, name: "Lunch Break", duration: 30, color: "bg-green-500" },
   { id: 3, name: "Afternoon Break", duration: 15, color: "bg-blue-500" },
 ];
 
-// Mock break history
-const breakHistory = [
-  {
-    id: 1,
-    type: "Coffee Break",
-    startTime: "10:30 AM",
-    endTime: "10:45 AM",
-    duration: "15 min",
-    date: "Nov 14, 2025",
-  },
-  {
-    id: 2,
-    type: "Lunch Break",
-    startTime: "12:00 PM",
-    endTime: "01:00 PM",
-    duration: "60 min",
-    date: "Nov 14, 2025",
-  },
-  {
-    id: 3,
-    type: "Coffee Break",
-    startTime: "03:15 PM",
-    endTime: "03:30 PM",
-    duration: "15 min",
-    date: "Nov 13, 2025",
-  },
-  {
-    id: 4,
-    type: "Lunch Break",
-    startTime: "12:30 PM",
-    endTime: "01:30 PM",
-    duration: "60 min",
-    date: "Nov 13, 2025",
-  },
-];
+function parseDurationToMinutes(duration: string | null): number {
+  if (!duration) return 0;
+  // Postgres interval can be like "900 seconds" or "00:15:00"
+  const secMatch = duration.match(/^(\d+)\s*seconds?$/i);
+  if (secMatch) return Math.floor(parseInt(secMatch[1]) / 60);
+  const hmsMatch = duration.match(/^(\d+):(\d+):(\d+)$/);
+  if (hmsMatch) return parseInt(hmsMatch[1]) * 60 + parseInt(hmsMatch[2]);
+  return 0;
+}
+
+function formatDuration(duration: string | null): string {
+  const mins = parseDurationToMinutes(duration);
+  if (mins < 1) {
+    // Show seconds for very short breaks
+    if (!duration) return "0 min";
+    const secMatch = duration.match(/^(\d+)\s*seconds?$/i);
+    if (secMatch) return `${secMatch[1]} sec`;
+    return "0 min";
+  }
+  const hours = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  if (hours > 0) return `${hours}h ${remainMins}m`;
+  return `${remainMins} min`;
+}
 
 export default function BreaksPage() {
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakTimer, setBreakTimer] = useState(0);
   const [breakStartTime, setBreakStartTime] = useState<Date | null>(null);
-  const [currentBreakType, setCurrentBreakType] = useState<string>("");
+  const [currentBreakType, setCurrentBreakType] = useState("");
+  const [activeBreakId, setActiveBreakId] = useState<string | null>(null);
+  const [todayBreaks, setTodayBreaks] = useState<BreakRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
+  const fetchBreaks = useCallback(async () => {
+    try {
+      const res = await fetch("/api/breaks");
+      if (!res.ok) return;
+      const data = await res.json();
+      setTodayBreaks(data.todayBreaks);
+
+      if (data.activeBreak) {
+        setIsOnBreak(true);
+        setActiveBreakId(data.activeBreak.break_id);
+        setCurrentBreakType(data.activeBreak.break_type);
+        const start = new Date(data.activeBreak.break_start);
+        setBreakStartTime(start);
+        setBreakTimer(Math.floor((Date.now() - start.getTime()) / 1000));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBreaks();
+  }, [fetchBreaks]);
+
+  // Timer tick
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isOnBreak && breakStartTime) {
@@ -84,17 +111,47 @@ export default function BreaksPage() {
     return () => clearInterval(interval);
   }, [isOnBreak, breakStartTime]);
 
-  const handleStartBreak = (breakName: string) => {
-    setIsOnBreak(true);
-    setBreakStartTime(new Date());
-    setCurrentBreakType(breakName);
+  const handleStartBreak = async (breakName: string) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/breaks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ break_type: breakName }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+
+      setIsOnBreak(true);
+      setActiveBreakId(data.break_id);
+      setBreakStartTime(new Date(data.break_start));
+      setCurrentBreakType(data.break_type);
+      setBreakTimer(0);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleEndBreak = () => {
-    setIsOnBreak(false);
-    setBreakTimer(0);
-    setBreakStartTime(null);
-    setCurrentBreakType("");
+  const handleEndBreak = async () => {
+    if (!activeBreakId) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/breaks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ break_id: activeBreakId }),
+      });
+      if (!res.ok) return;
+
+      setIsOnBreak(false);
+      setBreakTimer(0);
+      setBreakStartTime(null);
+      setCurrentBreakType("");
+      setActiveBreakId(null);
+      fetchBreaks();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -105,8 +162,22 @@ export default function BreaksPage() {
       .padStart(2, "0")}`;
   };
 
-  const breaksToday = 2;
-  const totalBreakTime = 75; // in minutes
+  const completedBreaks = todayBreaks.filter((b) => b.break_end !== null);
+  const breaksToday = completedBreaks.length;
+  const totalBreakTime = completedBreaks.reduce(
+    (sum, b) => sum + parseDurationToMinutes(b.break_duration),
+    0
+  );
+
+  if (loading) {
+    return (
+      <EmployeeLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </EmployeeLayout>
+    );
+  }
 
   return (
     <EmployeeLayout>
@@ -196,9 +267,10 @@ export default function BreaksPage() {
                 size="lg"
                 className="w-full"
                 variant="destructive"
+                disabled={actionLoading}
               >
                 <Pause className="mr-2 h-5 w-5" />
-                End Break
+                {actionLoading ? "Ending..." : "End Break"}
               </Button>
             </CardContent>
           </Card>
@@ -238,9 +310,10 @@ export default function BreaksPage() {
                         onClick={() => handleStartBreak(breakType.name)}
                         className="w-full"
                         variant="outline"
+                        disabled={actionLoading}
                       >
                         <Play className="mr-2 h-4 w-4" />
-                        Start Break
+                        {actionLoading ? "Starting..." : "Start Break"}
                       </Button>
                     </CardContent>
                   </Card>
@@ -253,34 +326,46 @@ export default function BreaksPage() {
         {/* Break History */}
         <Card>
           <CardHeader>
-            <CardTitle>Break History</CardTitle>
-            <CardDescription>Your recent break records</CardDescription>
+            <CardTitle>Today&apos;s Break History</CardTitle>
+            <CardDescription>Your break records for today</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>End Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {breakHistory.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>{record.date}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{record.type}</Badge>
-                    </TableCell>
-                    <TableCell>{record.startTime}</TableCell>
-                    <TableCell>{record.endTime}</TableCell>
-                    <TableCell>{record.duration}</TableCell>
+            {completedBreaks.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">
+                No breaks taken today
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Start Time</TableHead>
+                    <TableHead>End Time</TableHead>
+                    <TableHead>Duration</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {completedBreaks.map((record) => (
+                    <TableRow key={record.break_id}>
+                      <TableCell>
+                        <Badge variant="outline">{record.break_type}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {record.break_start
+                          ? new Date(record.break_start).toLocaleTimeString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        {record.break_end
+                          ? new Date(record.break_end).toLocaleTimeString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell>{formatDuration(record.break_duration)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

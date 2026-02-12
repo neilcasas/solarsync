@@ -6,6 +6,13 @@ import Link from "next/link";
 import { TwoFourteenLogo } from "@/components/TwoFourteenLogo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,6 +21,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("employee");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +45,7 @@ export default function SignupPage() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password, role }),
       });
 
       const data = await res.json();
@@ -47,7 +55,11 @@ export default function SignupPage() {
         return;
       }
 
-      router.push("/breaks");
+      if (data.user.role === "hr" || data.user.role === "admin") {
+        router.push("/hr");
+      } else {
+        router.push("/breaks");
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -85,7 +97,7 @@ export default function SignupPage() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                  className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -99,7 +111,7 @@ export default function SignupPage() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                  className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
                 />
               </div>
             </div>
@@ -115,8 +127,24 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="role" className="text-sm font-medium text-foreground">
+                Role (Testing)
+              </label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger className="bg-neutral-900 text-white border-neutral-700">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employee">Employee</SelectItem>
+                  <SelectItem value="hr">HR</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -130,7 +158,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
               />
             </div>
 
@@ -145,7 +173,7 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
               />
             </div>
           </div>

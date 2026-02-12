@@ -7,7 +7,7 @@ import { createSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const { firstName, lastName, email, password } = await request.json();
+    const { firstName, lastName, email, password, role } = await request.json();
 
     if (!firstName || !lastName || !email || !password) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         last_name: lastName,
         email,
         password: hashedPassword,
-        role: "employee",
+        role: role || "employee",
       })
       .returning();
 
