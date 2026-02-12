@@ -7,38 +7,47 @@ import { TwoFourteenLogo } from "@/components/TwoFourteenLogo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || "Signup failed");
         return;
       }
 
-      // Redirect based on role
-      if (data.user.role === "hr") {
-        router.push("/hr");
-      } else {
-        router.push("/breaks");
-      }
+      router.push("/breaks");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -64,6 +73,37 @@ export default function LoginPage() {
           )}
 
           <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="firstName" className="text-sm font-medium text-foreground">
+                  First Name
+                </label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="lastName" className="text-sm font-medium text-foreground">
+                  Last Name
+                </label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                />
+              </div>
+            </div>
+
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
@@ -86,9 +126,24 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                Confirm Password
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
               />
@@ -96,13 +151,13 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full mt-2" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
 
           <p className="text-sm text-center text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-[#C4D600] hover:underline font-medium">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/login" className="text-[#C4D600] hover:underline font-medium">
+              Log in
             </Link>
           </p>
         </form>

@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plane, Plus, Calendar as CalendarIcon } from "lucide-react";
+import { useSession } from "@/hooks/useSession";
 
 type LeaveRecord = {
   leave_id: string;
@@ -48,10 +49,8 @@ type LeaveRecord = {
   status: "Pending" | "Approved" | "Rejected" | "Cancelled";
 };
 
-// TODO: Replace with actual employee ID from auth
-const EMPLOYEE_ID = "00000000-0000-0000-0000-000000000001";
-
 export default function LeavesPage() {
+  const { user, status: sessionStatus } = useSession();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [leaveType, setLeaveType] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
@@ -61,7 +60,8 @@ export default function LeavesPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchLeaves = useCallback(async () => {
-    const res = await fetch(`/api/leaves?employeeId=${EMPLOYEE_ID}`);
+    const res = await fetch("/api/leaves");
+    if (!res.ok) return;
     const data = await res.json();
     setLeaves(data);
     setLoading(false);
@@ -78,7 +78,6 @@ export default function LeavesPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        employee_id: EMPLOYEE_ID,
         leave_type: leaveType,
         leave_date_from: startDate.toISOString().split("T")[0],
         leave_date_to: endDate.toISOString().split("T")[0],

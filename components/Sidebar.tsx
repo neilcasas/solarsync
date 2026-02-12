@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { TwoFourteenLogo } from "./TwoFourteenLogo";
 import { cn } from "@/lib/utils";
-import { LucideIcon, Settings } from "lucide-react";
+import { LucideIcon, Settings, LogOut } from "lucide-react";
+import { useSession } from "@/hooks/useSession";
 
 interface SidebarNavItem {
   title: string;
@@ -18,16 +19,33 @@ interface SidebarProps {
 
 export function Sidebar({ navItems }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, status, logout } = useSession();
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    const f = firstName?.[0] ?? "";
+    const l = lastName?.[0] ?? "";
+    return (f + l).toUpperCase() || "?";
+  };
 
   // Determine if we're in HR route
   const isHRRoute = pathname.startsWith("/hr");
-  const profileName = isHRRoute ? "Sara Macalintal" : "John Serrano";
+  const profileName = user
+    ? `${user.firstName} ${user.lastName}`
+    : isHRRoute
+      ? "Sara Macalintal"
+      : "John Serrano";
   const profilePosition = isHRRoute ? "HR Officer" : "Software Engineer";
-  const profileInitials = isHRRoute ? "SJ" : "JD";
+  const profileInitials = user
+    ? getInitials(user.firstName, user.lastName)
+    : isHRRoute
+      ? "SM"
+      : "JS";
 
-  // Mock status - you can replace this with actual state management
-  const status = isHRRoute ? "Working" : "Working"; // or "On Break"
-  const statusColor = status === "Working" ? "bg-green-500" : "bg-orange-500";
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   return (
     <div className="flex flex-col h-screen w-64 bg-[#333333] border-r border-[#444444]">
@@ -69,6 +87,15 @@ export function Sidebar({ navItems }: SidebarProps) {
         <button className="flex items-center gap-3 px-4 py-2 w-full rounded-lg text-gray-300 hover:bg-[#444444] hover:text-white transition-colors mb-3">
           <Settings className="h-5 w-5" />
           <span className="font-medium">Settings</span>
+        </button>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-2 w-full rounded-lg text-gray-300 hover:bg-[#444444] hover:text-white transition-colors mb-3"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="font-medium">Logout</span>
         </button>
 
         {/* Profile Card */}

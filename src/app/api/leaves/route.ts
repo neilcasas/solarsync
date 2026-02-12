@@ -4,28 +4,35 @@ import {
   createLeave,
   cancelLeave,
 } from "@/src/db/queries/leaves";
+import { getSession } from "@/lib/auth";
 
-// GET /api/leaves?employeeId=xxx - Get employee's leaves
-export async function GET(req: NextRequest) {
-  const employeeId = req.nextUrl.searchParams.get("employeeId");
-  if (!employeeId) {
-    return NextResponse.json({ error: "employeeId required" }, { status: 400 });
+// GET /api/leaves - Get current employee's leaves
+export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const leaves = await getLeavesByEmployeeId(employeeId);
+
+  const leaves = await getLeavesByEmployeeId(session.userId);
   return NextResponse.json(leaves);
 }
 
 // POST /api/leaves - Create leave request
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { employee_id, leave_type, leave_date_from, leave_date_to, reason_employee, remaining_leaves } = body;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  if (!employee_id || !leave_type || !leave_date_from || !leave_date_to) {
+  const body = await req.json();
+  const { leave_type, leave_date_from, leave_date_to, reason_employee, remaining_leaves } = body;
+
+  if (!leave_type || !leave_date_from || !leave_date_to) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   const leave = await createLeave({
-    employee_id,
+    employee_id: session.userId,
     leave_type,
     leave_date_from,
     leave_date_to,
