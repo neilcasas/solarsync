@@ -12,7 +12,7 @@ export interface SessionPayload {
   email: string;
   firstName: string;
   lastName: string;
-  role: "employee" | "hr";
+  role: "employee" | "hr" | "admin";
 }
 
 export async function createSession(payload: SessionPayload) {

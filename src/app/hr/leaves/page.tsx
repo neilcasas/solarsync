@@ -33,7 +33,7 @@ import {
 
 type LeaveRequest = {
   leave_id: string;
-  employee_id: string;
+  user_id: string;
   employeeName: string | null;
   employeeLastName: string | null;
   leave_type: string;
@@ -45,9 +45,6 @@ type LeaveRequest = {
   remaining_leaves: number;
   decision_timestamp: string | null;
 };
-
-// TODO: Replace with actual HR ID from auth
-const HR_ID = "00000000-0000-0000-0000-000000000001";
 
 const calculateDays = (from: string, to: string) => {
   const start = new Date(from);
@@ -126,7 +123,7 @@ export default function HRLeavesPage() {
     await fetch("/api/hr/leaves", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ leave_id: leaveId, action: "approve", hr_id: HR_ID }),
+      body: JSON.stringify({ leave_id: leaveId, action: "approve" }),
     });
     fetchLeaves();
   };
@@ -135,7 +132,7 @@ export default function HRLeavesPage() {
     await fetch("/api/hr/leaves", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ leave_id: leaveId, action: "reject", hr_id: HR_ID }),
+      body: JSON.stringify({ leave_id: leaveId, action: "reject" }),
     });
     fetchLeaves();
   };

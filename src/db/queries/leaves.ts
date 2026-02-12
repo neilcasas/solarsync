@@ -1,5 +1,5 @@
 import { db } from "@/src/db";
-import { leaveRequestTable, employeeTable } from "@/src/db/schema";
+import { leaveRequestTable, usersTable } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export type LeaveInsert = typeof leaveRequestTable.$inferInsert;
@@ -10,9 +10,9 @@ export async function getAllLeaveRequests() {
   return db
     .select({
       leave_id: leaveRequestTable.leave_id,
-      employee_id: leaveRequestTable.employee_id,
-      employeeName: employeeTable.first_name,
-      employeeLastName: employeeTable.last_name,
+      user_id: leaveRequestTable.user_id,
+      employeeName: usersTable.first_name,
+      employeeLastName: usersTable.last_name,
       leave_type: leaveRequestTable.leave_type,
       leave_date_from: leaveRequestTable.leave_date_from,
       leave_date_to: leaveRequestTable.leave_date_to,
@@ -23,16 +23,16 @@ export async function getAllLeaveRequests() {
       decision_timestamp: leaveRequestTable.decision_timestamp,
     })
     .from(leaveRequestTable)
-    .leftJoin(employeeTable, eq(leaveRequestTable.employee_id, employeeTable.employee_id))
+    .leftJoin(usersTable, eq(leaveRequestTable.user_id, usersTable.user_id))
     .orderBy(desc(leaveRequestTable.leave_date_from));
 }
 
-// Get leave requests by employee ID
-export async function getLeavesByEmployeeId(employeeId: string) {
+// Get leave requests by user ID
+export async function getLeavesByUserId(userId: string) {
   return db
     .select()
     .from(leaveRequestTable)
-    .where(eq(leaveRequestTable.employee_id, employeeId))
+    .where(eq(leaveRequestTable.user_id, userId))
     .orderBy(desc(leaveRequestTable.leave_date_from));
 }
 
@@ -80,20 +80,20 @@ export async function cancelLeave(leaveId: string) {
 }
 
 // Approve leave request (HR action)
-export async function approveLeave(leaveId: string, hrId: string, reasonHr?: string) {
+export async function approveLeave(leaveId: string, decidedBy: string, reasonHr?: string) {
   return updateLeave(leaveId, {
     status: "Approved",
-    hr_id: hrId,
+    decided_by: decidedBy,
     reason_hr: reasonHr,
     decision_timestamp: new Date(),
   });
 }
 
 // Reject leave request (HR action)
-export async function rejectLeave(leaveId: string, hrId: string, reasonHr?: string) {
+export async function rejectLeave(leaveId: string, decidedBy: string, reasonHr?: string) {
   return updateLeave(leaveId, {
     status: "Rejected",
-    hr_id: hrId,
+    decided_by: decidedBy,
     reason_hr: reasonHr,
     decision_timestamp: new Date(),
   });

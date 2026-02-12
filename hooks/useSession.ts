@@ -7,7 +7,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "employee" | "hr";
+  role: "employee" | "hr" | "admin";
 }
 
 interface SessionState {

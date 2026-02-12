@@ -75,7 +75,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
               />
             </div>
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white text-neutral-900 placeholder:text-neutral-500 border-none"
+                className="bg-neutral-900 text-white placeholder:text-neutral-500 border-neutral-700"
               />
             </div>
           </div>

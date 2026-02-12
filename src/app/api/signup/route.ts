@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { employeeTable } from "@/src/db/schema";
+import { usersTable } from "@/src/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     // Check if email already exists
     const existing = await db
       .select()
-      .from(employeeTable)
-      .where(eq(employeeTable.email, email))
+      .from(usersTable)
+      .where(eq(usersTable.email, email))
       .limit(1);
 
     if (existing.length > 0) {
@@ -33,35 +33,36 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Insert employee
-    const [newEmployee] = await db
-      .insert(employeeTable)
+    // Insert user
+    const [newUser] = await db
+      .insert(usersTable)
       .values({
         first_name: firstName,
         last_name: lastName,
         email,
         password: hashedPassword,
+        role: "employee",
       })
       .returning();
 
     // Create session
     await createSession({
-      userId: newEmployee.employee_id,
-      email: newEmployee.email,
-      firstName: newEmployee.first_name,
-      lastName: newEmployee.last_name,
-      role: "employee",
+      userId: newUser.user_id,
+      email: newUser.email,
+      firstName: newUser.first_name,
+      lastName: newUser.last_name,
+      role: newUser.role,
     });
 
     return NextResponse.json(
       {
         message: "Account created successfully",
         user: {
-          id: newEmployee.employee_id,
-          email: newEmployee.email,
-          firstName: newEmployee.first_name,
-          lastName: newEmployee.last_name,
-          role: "employee",
+          id: newUser.user_id,
+          email: newUser.email,
+          firstName: newUser.first_name,
+          lastName: newUser.last_name,
+          role: newUser.role,
         },
       },
       { status: 201 }

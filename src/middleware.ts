@@ -30,13 +30,13 @@ export async function middleware(request: NextRequest) {
     const { payload } = await jwtVerify(token, SESSION_SECRET);
     const role = payload.role as string;
 
-    // HR routes require hr role
-    if (pathname.startsWith("/hr") && role !== "hr") {
+    // HR routes require hr or admin role
+    if (pathname.startsWith("/hr") && role !== "hr" && role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
     // Employee routes require employee role
-    if (!pathname.startsWith("/hr") && role === "hr") {
+    if (!pathname.startsWith("/hr") && (role === "hr" || role === "admin")) {
       return NextResponse.redirect(new URL("/hr", request.url));
     }
 

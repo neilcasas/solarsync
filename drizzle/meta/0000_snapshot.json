@@ -1,5 +1,5 @@
 {
-  "id": "f4e6c369-dd69-41d3-b16f-48eb0f8a6120",
+  "id": "a71cacf6-4b57-402a-974b-acefb4000802",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -15,8 +15,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "employee_id": {
-          "name": "employee_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -42,15 +42,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "attendance_log_employee_id_employee_employee_id_fk": {
-          "name": "attendance_log_employee_id_employee_employee_id_fk",
+        "attendance_log_user_id_users_user_id_fk": {
+          "name": "attendance_log_user_id_users_user_id_fk",
           "tableFrom": "attendance_log",
-          "tableTo": "employee",
+          "tableTo": "users",
           "columnsFrom": [
-            "employee_id"
+            "user_id"
           ],
           "columnsTo": [
-            "employee_id"
+            "user_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -73,8 +73,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "employee_id": {
-          "name": "employee_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -112,15 +112,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "break_log_employee_id_employee_employee_id_fk": {
-          "name": "break_log_employee_id_employee_employee_id_fk",
+        "break_log_user_id_users_user_id_fk": {
+          "name": "break_log_user_id_users_user_id_fk",
           "tableFrom": "break_log",
-          "tableTo": "employee",
+          "tableTo": "users",
           "columnsFrom": [
-            "employee_id"
+            "user_id"
           ],
           "columnsTo": [
-            "employee_id"
+            "user_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -164,171 +164,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.employee": {
-      "name": "employee",
-      "schema": "",
-      "columns": {
-        "employee_id": {
-          "name": "employee_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "department_id": {
-          "name": "department_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "first_name": {
-          "name": "first_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_name": {
-          "name": "last_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "password": {
-          "name": "password",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timezone": {
-          "name": "timezone",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'Asia/Manila'"
-        },
-        "status": {
-          "name": "status",
-          "type": "account_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'Active'"
-        },
-        "last_login": {
-          "name": "last_login",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "employee_department_id_department_department_id_fk": {
-          "name": "employee_department_id_department_department_id_fk",
-          "tableFrom": "employee",
-          "tableTo": "department",
-          "columnsFrom": [
-            "department_id"
-          ],
-          "columnsTo": [
-            "department_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "employee_email_unique": {
-          "name": "employee_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.hr_personnel": {
-      "name": "hr_personnel",
-      "schema": "",
-      "columns": {
-        "hr_id": {
-          "name": "hr_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "first_name": {
-          "name": "first_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_name": {
-          "name": "last_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "password": {
-          "name": "password",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "role_permission": {
-          "name": "role_permission",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "account_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'Active'"
-        },
-        "last_login": {
-          "name": "last_login",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "hr_personnel_email_unique": {
-          "name": "hr_personnel_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.inactivity_log": {
       "name": "inactivity_log",
       "schema": "",
@@ -340,8 +175,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "employee_id": {
-          "name": "employee_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -373,15 +208,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "inactivity_log_employee_id_employee_employee_id_fk": {
-          "name": "inactivity_log_employee_id_employee_employee_id_fk",
+        "inactivity_log_user_id_users_user_id_fk": {
+          "name": "inactivity_log_user_id_users_user_id_fk",
           "tableFrom": "inactivity_log",
-          "tableTo": "employee",
+          "tableTo": "users",
           "columnsFrom": [
-            "employee_id"
+            "user_id"
           ],
           "columnsTo": [
-            "employee_id"
+            "user_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -404,8 +239,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "employee_id": {
-          "name": "employee_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -454,8 +289,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "hr_id": {
-          "name": "hr_id",
+        "decided_by": {
+          "name": "decided_by",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
@@ -469,28 +304,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "leave_request_employee_id_employee_employee_id_fk": {
-          "name": "leave_request_employee_id_employee_employee_id_fk",
+        "leave_request_user_id_users_user_id_fk": {
+          "name": "leave_request_user_id_users_user_id_fk",
           "tableFrom": "leave_request",
-          "tableTo": "employee",
+          "tableTo": "users",
           "columnsFrom": [
-            "employee_id"
+            "user_id"
           ],
           "columnsTo": [
-            "employee_id"
+            "user_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "leave_request_hr_id_hr_personnel_hr_id_fk": {
-          "name": "leave_request_hr_id_hr_personnel_hr_id_fk",
+        "leave_request_decided_by_users_user_id_fk": {
+          "name": "leave_request_decided_by_users_user_id_fk",
           "tableFrom": "leave_request",
-          "tableTo": "hr_personnel",
+          "tableTo": "users",
           "columnsFrom": [
-            "hr_id"
+            "decided_by"
           ],
           "columnsTo": [
-            "hr_id"
+            "user_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -498,6 +333,107 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "department_id": {
+          "name": "department_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'employee'"
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Asia/Manila'"
+        },
+        "status": {
+          "name": "status",
+          "type": "account_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Active'"
+        },
+        "last_login": {
+          "name": "last_login",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_department_id_department_department_id_fk": {
+          "name": "users_department_id_department_department_id_fk",
+          "tableFrom": "users",
+          "tableTo": "department",
+          "columnsFrom": [
+            "department_id"
+          ],
+          "columnsTo": [
+            "department_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -516,8 +452,9 @@
       "name": "break_type",
       "schema": "public",
       "values": [
-        "Lunch",
-        "Short Break"
+        "morning",
+        "lunch",
+        "afternoon"
       ]
     },
     "public.leave_status": {
@@ -538,6 +475,15 @@
         "Sick",
         "Emergency",
         "Personal"
+      ]
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "employee",
+        "hr",
+        "admin"
       ]
     }
   },

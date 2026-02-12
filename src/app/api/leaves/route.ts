@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getLeavesByEmployeeId,
+  getLeavesByUserId,
   createLeave,
   cancelLeave,
 } from "@/src/db/queries/leaves";
 import { getSession } from "@/lib/auth";
 
-// GET /api/leaves - Get current employee's leaves
+// GET /api/leaves - Get current user's leaves
 export async function GET() {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const leaves = await getLeavesByEmployeeId(session.userId);
+  const leaves = await getLeavesByUserId(session.userId);
   return NextResponse.json(leaves);
 }
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   }
 
   const leave = await createLeave({
-    employee_id: session.userId,
+    user_id: session.userId,
     leave_type,
     leave_date_from,
     leave_date_to,

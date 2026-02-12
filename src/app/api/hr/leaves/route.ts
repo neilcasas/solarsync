@@ -5,27 +5,38 @@ import {
   rejectLeave,
   deleteLeave,
 } from "@/src/db/queries/leaves";
+import { getSession } from "@/lib/auth";
 
 // GET /api/hr/leaves - Get all leave requests
 export async function GET() {
+  const session = await getSession();
+  if (!session || (session.role !== "hr" && session.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const leaves = await getAllLeaveRequests();
   return NextResponse.json(leaves);
 }
 
 // PATCH /api/hr/leaves - Approve/Reject leave
 export async function PATCH(req: NextRequest) {
-  const body = await req.json();
-  const { leave_id, action, hr_id, reason_hr } = body;
+  const session = await getSession();
+  if (!session || (session.role !== "hr" && session.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  if (!leave_id || !action || !hr_id) {
+  const body = await req.json();
+  const { leave_id, action, reason_hr } = body;
+
+  if (!leave_id || !action) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   let leave;
   if (action === "approve") {
-    leave = await approveLeave(leave_id, hr_id, reason_hr);
+    leave = await approveLeave(leave_id, session.userId, reason_hr);
   } else if (action === "reject") {
-    leave = await rejectLeave(leave_id, hr_id, reason_hr);
+    leave = await rejectLeave(leave_id, session.userId, reason_hr);
   } else {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
@@ -35,6 +46,11 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE /api/hr/leaves - Delete leave request
 export async function DELETE(req: NextRequest) {
+  const session = await getSession();
+  if (!session || (session.role !== "hr" && session.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { leave_id } = body;
 
