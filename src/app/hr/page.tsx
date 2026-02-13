@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HRLayout } from "@/components/HRLayout";
 import {
   LineChart,
@@ -48,8 +48,23 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+type HRAttendanceEmployee = {
+  id: string;
+  name: string;
+  status: "Working" | "On Break" | "Clocked Out";
+  client: string;
+  clockIn: string;
+  workingTime: string;
+  attendance: {
+    attended: number;
+    late: number;
+    absent: number;
+    leave: number;
+  };
+};
+
 // Function to generate PDF report
-const generateAttendanceReport = (employees: typeof employeesData) => {
+const generateAttendanceReport = (employees: HRAttendanceEmployee[]) => {
   const reportContent = `
 ATTENDANCE REPORT
 Generated: ${new Date().toLocaleString()}
@@ -93,127 +108,56 @@ End of Report
   URL.revokeObjectURL(url);
 };
 
-// Mock employee data
-const employeesData = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    status: "Working",
-    client: "Acme Corp",
-    clockIn: "09:00 AM",
-    workingTime: "3h 45m",
-    attendance: {
-      attended: 70,
-      late: 15,
-      absent: 5,
-      leave: 10,
-    },
-  },
-  {
-    id: 2,
-    name: "Bob Smith",
-    status: "On Break",
-    client: "TechStart Inc",
-    clockIn: "08:45 AM",
-    workingTime: "4h 0m",
-    attendance: {
-      attended: 65,
-      late: 20,
-      absent: 10,
-      leave: 5,
-    },
-  },
-  {
-    id: 3,
-    name: "Carol Martinez",
-    status: "Working",
-    client: "Global Systems",
-    clockIn: "08:30 AM",
-    workingTime: "4h 15m",
-    attendance: {
-      attended: 80,
-      late: 10,
-      absent: 5,
-      leave: 5,
-    },
-  },
-  {
-    id: 4,
-    name: "David Lee",
-    status: "Clocked Out",
-    client: "N/A",
-    clockIn: "N/A",
-    workingTime: "0h 0m",
-    attendance: {
-      attended: 55,
-      late: 25,
-      absent: 15,
-      leave: 5,
-    },
-  },
-  {
-    id: 5,
-    name: "Emma Wilson",
-    status: "Working",
-    client: "InnovateCo",
-    clockIn: "09:00 AM",
-    workingTime: "3h 45m",
-    attendance: {
-      attended: 75,
-      late: 10,
-      absent: 5,
-      leave: 10,
-    },
-  },
-  {
-    id: 6,
-    name: "Frank Brown",
-    status: "Working",
-    client: "Digital Solutions",
-    clockIn: "08:15 AM",
-    workingTime: "4h 30m",
-    attendance: {
-      attended: 85,
-      late: 8,
-      absent: 2,
-      leave: 5,
-    },
-  },
-  {
-    id: 7,
-    name: "Grace Chen",
-    status: "On Break",
-    client: "Acme Corp",
-    clockIn: "09:15 AM",
-    workingTime: "3h 30m",
-    attendance: {
-      attended: 60,
-      late: 20,
-      absent: 12,
-      leave: 8,
-    },
-  },
-  {
-    id: 8,
-    name: "Henry Davis",
-    status: "Working",
-    client: "TechStart Inc",
-    clockIn: "08:45 AM",
-    workingTime: "4h 0m",
-    attendance: {
-      attended: 78,
-      late: 12,
-      absent: 5,
-      leave: 5,
-    },
-  },
-];
-
 export default function HRPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [employees] = useState(employeesData);
+  const [employees, setEmployees] = useState<HRAttendanceEmployee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
+
+  const fetchAttendance = useCallback(async () => {
+    try {
+      const res = await fetch("/api/hr/attendance");
+      if (!res.ok) return;
+
+      const data: {
+        employees: Array<{
+          user_id: string;
+          name: string;
+          status: "Working" | "On Break" | "Clocked Out";
+          clockIn: string;
+          workingTime: string;
+        }>;
+      } = await res.json();
+
+      const mapped = data.employees.map((employee) => {
+        const attendance =
+          employee.status === "Working"
+            ? { attended: 70, late: 10, absent: 10, leave: 10 }
+            : employee.status === "On Break"
+            ? { attended: 65, late: 15, absent: 10, leave: 10 }
+            : { attended: 55, late: 20, absent: 15, leave: 10 };
+
+        return {
+          id: employee.user_id,
+          name: employee.name,
+          status: employee.status,
+          client: "N/A",
+          clockIn: employee.clockIn,
+          workingTime: employee.workingTime,
+          attendance,
+        };
+      });
+
+      setEmployees(mapped);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [fetchAttendance]);
 
   // Generate weekly data
   const weeklyData = [
@@ -273,6 +217,16 @@ export default function HRPage() {
   const clockedOutEmployees = employees.filter(
     (e) => e.status === "Clocked Out"
   ).length;
+
+  if (loading) {
+    return (
+      <HRLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </HRLayout>
+    );
+  }
 
   return (
     <HRLayout>
@@ -433,7 +387,7 @@ export default function HRPage() {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-[240px] justify-start text-left font-normal ${
+                            className={`w-60 justify-start text-left font-normal ${
                               !dateFrom && "text-muted-foreground"
                             }`}
                           >
@@ -462,7 +416,7 @@ export default function HRPage() {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-[240px] justify-start text-left font-normal ${
+                            className={`w-60 justify-start text-left font-normal ${
                               !dateTo && "text-muted-foreground"
                             }`}
                           >
@@ -589,7 +543,7 @@ export default function HRPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium min-w-[40px]">
+                        <span className="text-sm font-medium min-w-10">
                           {employee.attendance.attended}%
                         </span>
                         <div className="flex-1 min-w-[100px]">

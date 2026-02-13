@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { EmployeeLayout } from "@/components/EmployeeLayout";
 import {
   Card,
@@ -17,14 +17,56 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
   Tooltip,
 } from "recharts";
+
+type AttendanceLog = {
+  attendance_id: string;
+  user_id: string;
+  time_in: string | null;
+  time_out: string | null;
+  total_hours: string | null;
+};
 
 export default function Home() {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [workingTime, setWorkingTime] = useState(0);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
+  const [activeAttendanceId, setActiveAttendanceId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const fetchAttendance = useCallback(async () => {
+    try {
+      const res = await fetch("/api/attendance");
+      if (!res.ok) return;
+
+      const data: {
+        todayLogs: AttendanceLog[];
+        activeLog: AttendanceLog | null;
+        totalWorkedSeconds: number;
+      } = await res.json();
+
+      setWorkingTime(data.totalWorkedSeconds);
+
+      if (data.activeLog?.time_in) {
+        const start = new Date(data.activeLog.time_in);
+        setIsClockedIn(true);
+        setActiveAttendanceId(data.activeLog.attendance_id);
+        setClockInTime(start);
+      } else {
+        setIsClockedIn(false);
+        setActiveAttendanceId(null);
+        setClockInTime(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [fetchAttendance]);
 
   // Update working time every second when clocked in
   useEffect(() => {
@@ -39,14 +81,39 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isClockedIn, clockInTime]);
 
-  const handleClockToggle = () => {
+  const handleClockToggle = async () => {
+    setActionLoading(true);
     if (!isClockedIn) {
-      setIsClockedIn(true);
-      setClockInTime(new Date());
+      try {
+        const res = await fetch("/api/attendance", { method: "POST" });
+        if (!res.ok) return;
+        const data: AttendanceLog = await res.json();
+        if (!data.time_in) return;
+
+        setIsClockedIn(true);
+        setActiveAttendanceId(data.attendance_id);
+        setClockInTime(new Date(data.time_in));
+      } finally {
+        setActionLoading(false);
+      }
     } else {
-      setIsClockedIn(false);
-      setWorkingTime(0);
-      setClockInTime(null);
+      try {
+        if (!activeAttendanceId) return;
+
+        const res = await fetch("/api/attendance", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attendance_id: activeAttendanceId }),
+        });
+        if (!res.ok) return;
+
+        setIsClockedIn(false);
+        setActiveAttendanceId(null);
+        setClockInTime(null);
+        fetchAttendance();
+      } finally {
+        setActionLoading(false);
+      }
     }
   };
 
@@ -71,6 +138,16 @@ export default function Home() {
     { name: "Leave Days", value: 5, color: "#FFA500" },
     { name: "Days Absent", value: 2, color: "#DC2626" },
   ];
+
+  if (loading) {
+    return (
+      <EmployeeLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </EmployeeLayout>
+    );
+  }
 
   return (
     <EmployeeLayout>
@@ -225,17 +302,18 @@ export default function Home() {
               onClick={handleClockToggle}
               size="lg"
               className="w-full"
+              disabled={actionLoading}
               variant={isClockedIn ? "destructive" : "default"}
             >
               {isClockedIn ? (
                 <>
                   <LogOut className="mr-2 h-5 w-5" />
-                  Clock Out
+                  {actionLoading ? "Clocking Out..." : "Clock Out"}
                 </>
               ) : (
                 <>
                   <LogIn className="mr-2 h-5 w-5" />
-                  Clock In
+                  {actionLoading ? "Clocking In..." : "Clock In"}
                 </>
               )}
             </Button>
